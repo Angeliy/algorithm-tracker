@@ -1,9 +1,15 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
-	entry: "./src/index.ts",
+	entry: {
+		index: "./src/index.ts",
+		lambda: "./src/lambda.ts",
+	},
 	format: "esm",
 	outDir: "./dist",
 	clean: true,
-	noExternal: [/@algorithm-tracker\/.*/],
+	deps: {
+		alwaysBundle: [/.*/],
+		onlyBundle: false,
+	},
 });

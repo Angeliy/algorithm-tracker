@@ -8,8 +8,11 @@ export function getNextReviewDate(
 	markedAt: Date,
 	reviewCount: number
 ): string | null {
-	if (reviewCount >= SCHEDULE.length) {
+	const intervalDays = SCHEDULE[reviewCount];
+
+	if (intervalDays === undefined) {
 		return null;
 	}
-	return format(addDays(markedAt, SCHEDULE[reviewCount]), "yyyy-MM-dd");
+
+	return format(addDays(markedAt, intervalDays), "yyyy-MM-dd");
 }
