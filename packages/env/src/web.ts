@@ -1,0 +1,13 @@
+import { createEnv } from "@t3-oss/env-core";
+import { z } from "zod";
+
+export const env = createEnv({
+	clientPrefix: "VITE_",
+	client: {
+		VITE_SERVER_URL: z.url(),
+	},
+	// biome-ignore lint/suspicious/noExplicitAny: Vite's import.meta.env lacks TypeScript types here
+	runtimeEnv: (import.meta as any).env,
+	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
+	emptyStringAsUndefined: true,
+});

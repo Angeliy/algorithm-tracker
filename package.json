@@ -1,0 +1,40 @@
+{
+  "name": "algorithm-tracker",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "check-types": "turbo check-types",
+    "dev:web": "turbo -F web dev",
+    "dev:server": "turbo -F server dev",
+    "db:push": "turbo -F @algorithm-tracker/db db:push",
+    "db:studio": "turbo -F @algorithm-tracker/db db:studio",
+    "db:generate": "turbo -F @algorithm-tracker/db db:generate",
+    "db:migrate": "turbo -F @algorithm-tracker/db db:migrate",
+    "check": "ultracite check",
+    "fix": "ultracite fix",
+    "seed": "turbo -F server seed",
+    "test": "echo 'No tests configured' && exit 0",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@algorithm-tracker/env": "workspace:*",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@algorithm-tracker/config": "workspace:*",
+    "@biomejs/biome": "2.4.16",
+    "@types/node": "catalog:",
+    "husky": "latest",
+    "turbo": "^2.9.16",
+    "typescript": "catalog:",
+    "ultracite": "7.8.3"
+  },
+  "packageManager": "pnpm@11.7.0"
+}
