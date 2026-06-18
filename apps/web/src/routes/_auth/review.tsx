@@ -50,9 +50,12 @@ function ReviewPage() {
 	}
 
 	return (
-		<div className="mx-auto max-w-3xl p-6">
-			<div className="mb-6 flex items-center justify-between">
-				<h1 className="font-bold text-2xl">错题本</h1>
+		<div className="py-8">
+			<div className="mb-8 flex items-center justify-between">
+				<div>
+					<h1 className="font-semibold text-xl tracking-tight">错题本</h1>
+					<p className="mt-1 text-muted-foreground text-sm">艾宾浩斯复习计划</p>
+				</div>
 				<span className="text-muted-foreground text-sm">
 					{data.length > 0 ? `${data.length} 题待复习` : "暂无待复习题目"}
 				</span>

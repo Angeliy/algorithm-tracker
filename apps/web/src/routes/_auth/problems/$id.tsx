@@ -211,7 +211,7 @@ function RouteComponent() {
 	}
 
 	return (
-		<div className="mx-auto max-w-3xl p-6">
+		<div className="py-8">
 			<div className="mb-6 flex items-start justify-between gap-4">
 				<div>
 					<h1 className="mb-2 font-bold text-2xl">{data.title}</h1>

@@ -172,9 +172,14 @@ function RouteComponent() {
 	}, {});
 
 	return (
-		<div className="mx-auto max-w-4xl p-6">
-			<div className="mb-6 flex items-center justify-between">
-				<h1 className="font-bold text-2xl">代码模板库</h1>
+		<div className="py-8">
+			<div className="mb-8 flex items-center justify-between">
+				<div>
+					<h1 className="font-semibold text-xl tracking-tight">代码模板库</h1>
+					<p className="mt-1 text-muted-foreground text-sm">
+						按类型整理的算法模板
+					</p>
+				</div>
 				<Dialog onOpenChange={setNewOpen} open={newOpen}>
 					<DialogTrigger
 						render={

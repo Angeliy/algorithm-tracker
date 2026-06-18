@@ -29,11 +29,17 @@ function RouteComponent() {
 	);
 
 	if (isLoading) {
-		return <div className="p-6 text-muted-foreground">加载中...</div>;
+		return (
+			<div className="py-12 text-center text-muted-foreground text-sm">
+				加载中...
+			</div>
+		);
 	}
 	if (isError) {
 		return (
-			<div className="p-6 text-destructive">统计数据加载失败，请刷新重试</div>
+			<div className="py-12 text-center text-destructive text-sm">
+				统计数据加载失败，请刷新重试
+			</div>
 		);
 	}
 
@@ -42,57 +48,85 @@ function RouteComponent() {
 			label: "总题数",
 			value: data?.total ?? 0,
 			icon: BookOpen,
+			desc: "累计记录",
 		},
 		{
 			label: "本周题数",
 			value: data?.thisWeek ?? 0,
 			icon: CalendarDays,
+			desc: "本周新增",
 		},
 		{
 			label: "连续打卡",
 			value: `${data?.streak ?? 0} 天`,
 			icon: Flame,
+			desc: "连续天数",
 		},
 	] as const;
 
 	return (
-		<div className="mx-auto max-w-4xl p-6">
-			<h1 className="mb-6 font-bold text-2xl">看板</h1>
+		<div className="py-8">
+			<div className="mb-8">
+				<h1 className="font-semibold text-xl tracking-tight">看板</h1>
+				<p className="mt-1 text-muted-foreground text-sm">
+					你的算法学习进度概览
+				</p>
+			</div>
 
-			<div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-				{stats.map(({ label, value, icon: Icon }) => (
-					<Card key={label}>
-						<CardHeader className="flex flex-row items-center justify-between pb-2">
-							<CardTitle className="font-medium text-sm">{label}</CardTitle>
-							<Icon
-								aria-hidden="true"
-								className="h-4 w-4 text-muted-foreground"
-							/>
+			<div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+				{stats.map(({ label, value, icon: Icon, desc }) => (
+					<Card className="shadow-sm" key={label}>
+						<CardHeader className="flex flex-row items-center justify-between pb-1">
+							<CardTitle className="font-medium text-muted-foreground text-sm">
+								{label}
+							</CardTitle>
+							<div className="rounded-md bg-primary/10 p-1.5">
+								<Icon aria-hidden="true" className="h-3.5 w-3.5 text-primary" />
+							</div>
 						</CardHeader>
 						<CardContent>
-							<p className="font-bold text-3xl">{value}</p>
+							<p className="font-bold text-2xl tracking-tight">{value}</p>
+							<p className="mt-0.5 text-muted-foreground text-xs">{desc}</p>
 						</CardContent>
 					</Card>
 				))}
 			</div>
 
-			<Card>
-				<CardHeader>
-					<CardTitle className="flex items-center gap-2 text-base">
-						<TrendingUp aria-hidden="true" className="h-4 w-4" />近 30 天趋势
+			<Card className="shadow-sm">
+				<CardHeader className="pb-2">
+					<CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
+						<TrendingUp aria-hidden="true" className="h-4 w-4" />近 30
+						天刷题趋势
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<ResponsiveContainer height={200} width="100%">
 						<LineChart data={data?.dailyTrend ?? []}>
-							<CartesianGrid strokeDasharray="3 3" />
-							<XAxis
-								dataKey="date"
-								tick={{ fontSize: 11 }}
-								tickFormatter={(d: string) => d.slice(5)}
+							<CartesianGrid
+								stroke="hsl(var(--border))"
+								strokeDasharray="3 3"
 							/>
-							<YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={24} />
+							<XAxis
+								axisLine={false}
+								dataKey="date"
+								tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+								tickFormatter={(d: string) => d.slice(5)}
+								tickLine={false}
+							/>
+							<YAxis
+								allowDecimals={false}
+								axisLine={false}
+								tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+								tickLine={false}
+								width={24}
+							/>
 							<Tooltip
+								contentStyle={{
+									backgroundColor: "hsl(var(--card))",
+									border: "1px solid hsl(var(--border))",
+									borderRadius: "8px",
+									fontSize: "12px",
+								}}
 								formatter={(value) => [String(value ?? 0), "题数"]}
 								labelFormatter={(label) => `日期: ${String(label)}`}
 							/>

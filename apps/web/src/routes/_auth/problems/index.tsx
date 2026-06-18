@@ -104,9 +104,12 @@ function RouteComponent() {
 	}
 
 	return (
-		<div className="mx-auto max-w-4xl p-6">
-			<div className="mb-6 flex items-center justify-between">
-				<h1 className="font-bold text-2xl">题目记录</h1>
+		<div className="py-8">
+			<div className="mb-8 flex items-center justify-between">
+				<div>
+					<h1 className="font-semibold text-xl tracking-tight">题目记录</h1>
+					<p className="mt-1 text-muted-foreground text-sm">你的算法练习记录</p>
+				</div>
 				<Button onClick={() => navigate({ to: "/problems/new" })}>
 					<PlusCircle className="mr-1 h-4 w-4" />
 					新增

@@ -7,14 +7,16 @@ export const Route = createFileRoute("/_auth")({
 	beforeLoad: async () => {
 		const session = await authClient.getSession();
 		if (!session.data) {
-			throw redirect({
-				to: "/login",
-			});
+			throw redirect({ to: "/login" });
 		}
 		return { session };
 	},
 });
 
 function AuthLayout() {
-	return <Outlet />;
+	return (
+		<div className="mx-auto w-full max-w-5xl px-6">
+			<Outlet />
+		</div>
+	);
 }
