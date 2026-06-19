@@ -64,3 +64,49 @@ Date: 2026-06-17
 - 多用户注册/权限系统
 - 移动端适配（桌面端优先）
 - 题目内容全文搜索
+
+## 6. 新增需求：题目自动同步（LeetCode）
+
+### 用户故事
+
+| ID | As a user, I want to... | So that... |
+|----|--------------------------|------------|
+| US-09 | 每天自动同步我在LeetCode的最新做题记录 | 不用手动一条条录入 |
+| US-10 | 系统自动判断哪些题目做得不顺利、该进错题本 | 不用自己判断 |
+
+### 功能需求
+
+- 每天上午9点定时触发任务（本地用node-cron模拟，部署后用AWS EventBridge触发Lambda）
+- 拉取LeetCode账号最近的提交记录（LeetCode无官方API，需用其网页内部的GraphQL接口，账号信息存`.env`）
+- 对每条新提交，由Claude判断处理方式：
+  - 一次AC（无失败提交）→ 自动新增一条"题目记录"，标记一次AC
+  - 多次提交才AC（中间有Wrong Answer）→ 新增题目记录，并自动标记进"错题本"待复习
+  - 题目已存在记录中 → 跳过，不重复创建
+- 自动写入的记录需打上"来源:自动同步"标识，区分手动添加的记录
+
+### Out of Scope
+
+- 真实Jira集成（已用LeetCode替代验证同等技术能力）
+
+
+## 7. 新增需求：工作流实时监控
+
+### 背景
+现有/workflow页面只展示静态Mermaid流程图，升级为实时监控面板，能看到/dean:ai当前实际执行到哪个节点/feature/task。
+
+### 用户故事
+
+| ID | As a user, I want to... | So that... |
+|----|--------------------------|------------|
+| US-11 | 打开/workflow页面就能看到/dean:ai当前的实时执行状态 | 不用一直盯着Claude Code对话框 |
+
+### 功能需求
+
+- /dean:ai执行过程中，每次进入/完成M1-M7任一节点时，把状态写入specs/workflow-status.json，记录：当前节点、当前feature、当前task、状态(进行中/已完成)、更新时间
+- 后端新增SSE接口(如GET /api/workflow/stream)，定期检查状态文件变化并推送给前端
+- /workflow页面用浏览器原生EventSource订阅该接口，实时更新页面上M1-M7各节点的状态展示(待机/进行中/已完成)，附带当前Feature/Task信息
+- 这是对Feature 3(dashboard-workflow)里/workflow页面的升级，原静态Mermaid图保留，下方新增实时状态区块
+
+### Out of Scope
+
+- 不需要做完整的"FE Harness"产品(需求探索/创建提案/视觉还原等10阶段)，只监控我们自己/dean:ai的M1-M7这7个节点

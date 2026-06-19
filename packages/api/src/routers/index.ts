@@ -3,6 +3,7 @@ import { problemRouter } from "./problem";
 import { problemLinkRouter } from "./problem-link";
 import { reviewRouter } from "./review";
 import { statsRouter } from "./stats";
+import { syncRouter } from "./sync";
 import { templateRouter } from "./template";
 
 export const appRouter = router({
@@ -16,5 +17,6 @@ export const appRouter = router({
 	review: reviewRouter,
 	template: templateRouter,
 	problemLink: problemLinkRouter,
+	sync: syncRouter,
 });
 export type AppRouter = typeof appRouter;

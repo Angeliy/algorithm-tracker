@@ -178,6 +178,9 @@ importers:
       hono:
         specifier: 'catalog:'
         version: 4.12.25
+      node-cron:
+        specifier: ^4.4.1
+        version: 4.4.1
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -188,6 +191,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.21
+      '@types/node-cron':
+        specifier: ^3.0.11
+        version: 3.0.11
       tsdown:
         specifier: ^0.21.9
         version: 0.21.10(typescript@6.0.3)
@@ -2735,6 +2741,9 @@ packages:
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
+  '@types/node-cron@3.0.11':
+    resolution: {integrity: sha512-0ikrnug3/IyneSHqCBeslAhlK2aBfYek1fGo4bP4QnZPmiqSGRK+Oy7ZMisLWkesffJvQ1cqAcBnJC+8+nxIAg==}
+
   '@types/node@22.19.21':
     resolution: {integrity: sha512-VMeFBSCKQKmm2swI2kW51SFusDqekC6q9trBCvJ/JliDchFSuoYYKN7yVNjPthP1HKZcx3U1gI/wTcEBjEFKTA==}
 
@@ -4662,6 +4671,10 @@ packages:
         optional: true
       sass:
         optional: true
+
+  node-cron@4.4.1:
+    resolution: {integrity: sha512-1e4Gku1qeKx1ywNnMoA0o5hiZ8iA4klH84TIszTHZAME68xVIjLkiBo5KrtowbcOJn8MQqJG/yWHjC/dFdMWyQ==}
+    engines: {node: '>=20'}
 
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
@@ -7614,6 +7627,8 @@ snapshots:
 
   '@types/ms@2.1.0': {}
 
+  '@types/node-cron@3.0.11': {}
+
   '@types/node@22.19.21':
     dependencies:
       undici-types: 6.21.0
@@ -9700,6 +9715,8 @@ snapshots:
     transitivePeerDependencies:
       - '@babel/core'
       - babel-plugin-macros
+
+  node-cron@4.4.1: {}
 
   node-domexception@1.0.0: {}
 

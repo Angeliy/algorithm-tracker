@@ -1,12 +1,19 @@
+import { Button } from "@algorithm-tracker/ui/components/button";
 import {
 	Card,
 	CardContent,
 	CardHeader,
 	CardTitle,
 } from "@algorithm-tracker/ui/components/card";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { BookOpen, CalendarDays, Flame, TrendingUp } from "lucide-react";
+import {
+	BookOpen,
+	CalendarDays,
+	Flame,
+	RefreshCw,
+	TrendingUp,
+} from "lucide-react";
 import {
 	CartesianGrid,
 	Line,
@@ -16,8 +23,58 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
+import { toast } from "sonner";
 
 import { trpc } from "@/utils/trpc";
+
+function SyncCard() {
+	const queryClient = useQueryClient();
+	const { data: log } = useQuery(trpc.sync.lastLog.queryOptions());
+
+	const { mutate, isPending } = useMutation({
+		...trpc.sync.trigger.mutationOptions(),
+		onSuccess: (result) => {
+			toast.success(`同步完成，新增 ${result.newProblems} 题`);
+			queryClient.invalidateQueries({ queryKey: [["sync", "lastLog"]] });
+			queryClient.invalidateQueries({ queryKey: [["stats"]] });
+			queryClient.invalidateQueries({ queryKey: [["problem", "list"]] });
+		},
+		onError: (err) => {
+			toast.error(err.message || "同步失败");
+		},
+	});
+
+	const lastSyncText = log
+		? `${new Date(log.syncedAt).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })} · 新增 ${log.newProblems} 题`
+		: "暂无同步记录";
+
+	return (
+		<Card className="shadow-sm">
+			<CardHeader className="flex flex-row items-center justify-between pb-1">
+				<CardTitle className="font-medium text-muted-foreground text-sm">
+					LeetCode 同步
+				</CardTitle>
+				<div className="rounded-md bg-primary/10 p-1.5">
+					<RefreshCw aria-hidden="true" className="h-3.5 w-3.5 text-primary" />
+				</div>
+			</CardHeader>
+			<CardContent className="flex items-end justify-between">
+				<div>
+					<p className="font-bold text-sm tracking-tight">上次同步</p>
+					<p className="mt-0.5 text-muted-foreground text-xs">{lastSyncText}</p>
+				</div>
+				<Button
+					disabled={isPending}
+					onClick={() => mutate()}
+					size="sm"
+					variant="outline"
+				>
+					{isPending ? "同步中..." : "手动同步"}
+				</Button>
+			</CardContent>
+		</Card>
+	);
+}
 
 export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
@@ -90,6 +147,10 @@ function RouteComponent() {
 						</CardContent>
 					</Card>
 				))}
+			</div>
+
+			<div className="mb-6">
+				<SyncCard />
 			</div>
 
 			<Card className="shadow-sm">

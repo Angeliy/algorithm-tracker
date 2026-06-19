@@ -31,3 +31,15 @@
 ## 2026-06-17 — Feature 5 / problem.list keyword Search
 
 **`problem.list` keyword param was not in the original schema.** The task notes said to add it without breaking existing filters. Add `keyword: z.string().optional()` to the input schema and an `ilike(problems.title, ...)` condition in the query — it composes naturally with the existing `difficulty`, `tag`, `isAc` filters via `conditions.push(...)`.
+
+## 2026-06-19 — Feature 6 / Service Package Placement
+
+**Service files that use drizzle-orm operators must live in `packages/api`, not `apps/server`.** `apps/server` doesn't have `drizzle-orm` as a direct dependency; the operators (`eq`, `and`, `desc`) are only available in `packages/api`. If a service needs both `env` (server-only) and drizzle queries, put it in `packages/api/src/services/` — `packages/api` already depends on both `@algorithm-tracker/env` and `drizzle-orm`.
+
+## 2026-06-19 — Feature 6 / node-cron Timezone
+
+**`node-cron` uses the server's local timezone by default.** Always pass `{ timezone: "Asia/Shanghai" }` (or the relevant timezone) as the third argument. Omitting it on a UTC server means `"0 9 * * *"` fires at UTC 09:00, not Beijing 09:00.
+
+## 2026-06-19 — Feature 6 / SYNC_SECRET Minimum Length
+
+**`SYNC_SECRET` env var should have `z.string().min(32).optional()`.** Without a minimum length, Zod accepts weak values like `"test"` or `"1"`. Any bearer-style secret used to protect an HTTP endpoint should enforce at least 32 characters at the schema level.
