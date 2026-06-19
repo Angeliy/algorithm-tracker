@@ -20,8 +20,8 @@ export default function SignInForm({
 
 	const form = useForm({
 		defaultValues: {
-			email: "",
-			password: "",
+			email: "dean.j.wang.usa@gmail.com",
+			password: "12345678",
 		},
 		onSubmit: async ({ value }) => {
 			await authClient.signIn.email(
@@ -40,7 +40,7 @@ export default function SignInForm({
 		validators: {
 			onSubmit: z.object({
 				email: z.email("请输入有效的邮箱地址"),
-				password: z.string().min(6, "密码至少 6 位"),
+				password: z.string().max(100),
 			}),
 		},
 	});

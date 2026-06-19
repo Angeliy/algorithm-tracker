@@ -42,7 +42,7 @@ export default function SignUpForm({
 			onSubmit: z.object({
 				name: z.string().min(2, "昵称至少 2 个字符"),
 				email: z.email("请输入有效的邮箱地址"),
-				password: z.string().min(6, "密码至少 6 位"),
+				password: z.string().max(100),
 			}),
 		},
 	});
