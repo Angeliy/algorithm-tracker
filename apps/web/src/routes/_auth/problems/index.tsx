@@ -8,6 +8,7 @@ import {
 } from "@algorithm-tracker/ui/components/card";
 import { Input } from "@algorithm-tracker/ui/components/input";
 import { Label } from "@algorithm-tracker/ui/components/label";
+import { Pagination } from "@algorithm-tracker/ui/components/pagination";
 import {
 	Select,
 	SelectContent,
@@ -43,6 +44,12 @@ const searchSchema = z.object({
 		.enum(["all", "yes", "no"])
 		.nullish()
 		.transform((v) => v ?? undefined),
+	page: z.coerce
+		.number()
+		.int()
+		.min(1)
+		.nullish()
+		.transform((v) => v ?? 1),
 });
 
 export const Route = createFileRoute("/_auth/problems/")({
@@ -78,9 +85,11 @@ function RouteComponent() {
 			difficulty: search.difficulty,
 			tag: search.tag,
 			isAc: isAcFilter,
+			page: search.page,
 		})
 	);
-	const data = listQuery.data ?? [];
+	const data = listQuery.data?.items ?? [];
+	const totalPages = listQuery.data?.totalPages ?? 1;
 	const isLoading = listQuery.isLoading;
 
 	const markForReview = useMutation(
@@ -98,9 +107,13 @@ function RouteComponent() {
 		value: string | null | undefined
 	) {
 		navigate({
-			search: (prev) => ({ ...prev, [key]: value || undefined }),
+			search: (prev) => ({ ...prev, [key]: value || undefined, page: 1 }),
 			replace: true,
 		});
+	}
+
+	function setPage(page: number) {
+		navigate({ search: (prev) => ({ ...prev, page }), replace: true });
 	}
 
 	return (
@@ -256,6 +269,11 @@ function RouteComponent() {
 					</Link>
 				))}
 			</div>
+			<Pagination
+				onPageChange={setPage}
+				page={search.page}
+				totalPages={totalPages}
+			/>
 		</div>
 	);
 }

@@ -10,6 +10,7 @@ import {
 } from "@algorithm-tracker/ui/components/dialog";
 import { Input } from "@algorithm-tracker/ui/components/input";
 import { Label } from "@algorithm-tracker/ui/components/label";
+import { Pagination } from "@algorithm-tracker/ui/components/pagination";
 import { Textarea } from "@algorithm-tracker/ui/components/textarea";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -123,14 +124,19 @@ function useDebounce<T>(value: T, delay: number): T {
 function RouteComponent() {
 	const [keyword, setKeyword] = useState("");
 	const debouncedKeyword = useDebounce(keyword, 300);
+	const [page, setPage] = useState(1);
 	const [newOpen, setNewOpen] = useState(false);
 	const [editTarget, setEditTarget] = useState<Template | null>(null);
 	const queryClient = useQueryClient();
 
 	const listQuery = useQuery(
-		trpc.template.list.queryOptions({ keyword: debouncedKeyword || undefined })
+		trpc.template.list.queryOptions({
+			keyword: debouncedKeyword || undefined,
+			page,
+		})
 	);
-	const templates = listQuery.data ?? [];
+	const templates = listQuery.data?.items ?? [];
+	const totalPages = listQuery.data?.totalPages ?? 1;
 
 	const createMutation = useMutation(
 		trpc.template.create.mutationOptions({
@@ -206,7 +212,10 @@ function RouteComponent() {
 			<div className="mb-6">
 				<Input
 					className="max-w-xs"
-					onChange={(e) => setKeyword(e.target.value)}
+					onChange={(e) => {
+						setKeyword(e.target.value);
+						setPage(1);
+					}}
 					placeholder="搜索类型或描述..."
 					value={keyword}
 				/>
@@ -284,6 +293,7 @@ function RouteComponent() {
 					</section>
 				))}
 			</div>
+			<Pagination onPageChange={setPage} page={page} totalPages={totalPages} />
 		</div>
 	);
 }

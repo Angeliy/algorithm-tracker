@@ -1,6 +1,6 @@
 import { db, problems, problemTags } from "@algorithm-tracker/db";
 import { TRPCError } from "@trpc/server";
-import { and, eq, ilike, inArray, type SQL } from "drizzle-orm";
+import { and, count, eq, ilike, inArray, type SQL } from "drizzle-orm";
 import { z } from "zod";
 
 import { protectedProcedure, router } from "../index";
@@ -93,10 +93,12 @@ export const problemRouter = router({
 				tag: z.string().optional(),
 				isAc: z.boolean().optional(),
 				keyword: z.string().optional(),
+				page: z.number().int().min(1).default(1),
+				pageSize: z.number().int().min(1).max(100).default(20),
 			})
 		)
 		.query(async ({ input }) => {
-			const { difficulty, tag, isAc, keyword } = input;
+			const { difficulty, tag, isAc, keyword, page, pageSize } = input;
 			const trimmedTag = tag?.trim().toLowerCase();
 
 			const conditions: SQL[] = [];
@@ -117,20 +119,33 @@ export const problemRouter = router({
 					.where(ilike(problemTags.tag, trimmedTag));
 				const ids = matchingIds.map((r) => r.problemId);
 				if (ids.length === 0) {
-					return [];
+					return { items: [], total: 0, page, pageSize, totalPages: 0 };
 				}
 				conditions.push(inArray(problems.id, ids));
 			}
 
+			const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+			const countResult = await db
+				.select({ total: count() })
+				.from(problems)
+				.where(where);
+			const total = countResult[0]?.total ?? 0;
+
+			if (total === 0) {
+				return { items: [], total: 0, page, pageSize, totalPages: 0 };
+			}
+
+			const totalPages = Math.ceil(total / pageSize);
+			const safePage = Math.min(page, totalPages);
+
 			const rows = await db
 				.select()
 				.from(problems)
-				.where(conditions.length > 0 ? and(...conditions) : undefined)
-				.orderBy(problems.date);
-
-			if (rows.length === 0) {
-				return [];
-			}
+				.where(where)
+				.orderBy(problems.date)
+				.limit(pageSize)
+				.offset((safePage - 1) * pageSize);
 
 			const rowIds = rows.map((p) => p.id);
 			const tagRows = await db
@@ -145,7 +160,13 @@ export const problemRouter = router({
 				tagMap.set(t.problemId, existing);
 			}
 
-			return rows.map((p) => ({ ...p, tags: tagMap.get(p.id) ?? [] }));
+			return {
+				items: rows.map((p) => ({ ...p, tags: tagMap.get(p.id) ?? [] })),
+				total,
+				page: safePage,
+				pageSize,
+				totalPages,
+			};
 		}),
 
 	getById: protectedProcedure

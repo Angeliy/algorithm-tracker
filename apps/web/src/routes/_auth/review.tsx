@@ -5,9 +5,11 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@algorithm-tracker/ui/components/card";
+import { Pagination } from "@algorithm-tracker/ui/components/pagination";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen, CheckCircle2, Clock } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { queryClient, trpc } from "@/utils/trpc";
@@ -31,14 +33,22 @@ const DIFFICULTY_COLOR: Record<string, string> = {
 const REVIEW_TOTAL = 5;
 
 function ReviewPage() {
-	const { data = [], isLoading } = useQuery(
-		trpc.review.getPending.queryOptions()
+	const [page, setPage] = useState(1);
+
+	const { data, isLoading } = useQuery(
+		trpc.review.getPending.queryOptions({ page })
 	);
+
+	const items = data?.items ?? [];
+	const total = data?.total ?? 0;
+	const totalPages = data?.totalPages ?? 1;
 
 	const completeReview = useMutation(
 		trpc.review.completeReview.mutationOptions({
 			onSuccess: () => {
-				queryClient.invalidateQueries(trpc.review.getPending.queryOptions());
+				queryClient.invalidateQueries(
+					trpc.review.getPending.queryOptions({ page })
+				);
 				toast.success("已完成本次复习");
 			},
 			onError: (err) => toast.error(err.message),
@@ -57,11 +67,11 @@ function ReviewPage() {
 					<p className="mt-1 text-muted-foreground text-sm">艾宾浩斯复习计划</p>
 				</div>
 				<span className="text-muted-foreground text-sm">
-					{data.length > 0 ? `${data.length} 题待复习` : "暂无待复习题目"}
+					{total > 0 ? `${total} 题待复习` : "暂无待复习题目"}
 				</span>
 			</div>
 
-			{data.length === 0 && (
+			{items.length === 0 && (
 				<div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
 					<BookOpen aria-hidden="true" className="h-10 w-10 opacity-40" />
 					<p>今日无待复习题目，继续保持！</p>
@@ -72,7 +82,7 @@ function ReviewPage() {
 			)}
 
 			<div className="grid gap-3">
-				{data.map((problem) => {
+				{items.map((problem) => {
 					const current = problem.reviewCount + 1;
 					return (
 						<Card key={problem.id}>
@@ -121,6 +131,7 @@ function ReviewPage() {
 					);
 				})}
 			</div>
+			<Pagination onPageChange={setPage} page={page} totalPages={totalPages} />
 		</div>
 	);
 }

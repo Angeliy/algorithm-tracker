@@ -85,7 +85,7 @@ function LinkedProblems({ problemId }: { problemId: string }) {
 	);
 
 	const linkedIds = new Set((linkedQuery.data ?? []).map((p) => p.id));
-	const searchResults = (searchQuery.data ?? []).filter(
+	const searchResults = (searchQuery.data?.items ?? []).filter(
 		(p) => p.id !== problemId && !linkedIds.has(p.id)
 	);
 

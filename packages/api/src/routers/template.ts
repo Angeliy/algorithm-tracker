@@ -1,6 +1,6 @@
 import { db, templates } from "@algorithm-tracker/db";
 import { TRPCError } from "@trpc/server";
-import { eq, ilike, or } from "drizzle-orm";
+import { count, eq, ilike, or } from "drizzle-orm";
 import { z } from "zod";
 
 import { protectedProcedure, router } from "../index";
@@ -13,29 +13,45 @@ const templateShape = z.object({
 
 export const templateRouter = router({
 	list: protectedProcedure
-		.input(z.object({ keyword: z.string().optional() }))
-		.query(({ input }) => {
-			const { keyword } = input;
+		.input(
+			z.object({
+				keyword: z.string().optional(),
+				page: z.number().int().min(1).default(1),
+				pageSize: z.number().int().min(1).max(100).default(20),
+			})
+		)
+		.query(async ({ input }) => {
+			const { keyword, page, pageSize } = input;
 			const trimmed = keyword?.trim();
-
-			if (trimmed) {
-				const pattern = `%${trimmed}%`;
-				return db
-					.select()
-					.from(templates)
-					.where(
-						or(
-							ilike(templates.type, pattern),
-							ilike(templates.description, pattern)
-						)
+			const where = trimmed
+				? or(
+						ilike(templates.type, `%${trimmed}%`),
+						ilike(templates.description, `%${trimmed}%`)
 					)
-					.orderBy(templates.type, templates.createdAt);
+				: undefined;
+
+			const countResult = await db
+				.select({ total: count() })
+				.from(templates)
+				.where(where);
+			const total = countResult[0]?.total ?? 0;
+
+			if (total === 0) {
+				return { items: [], total: 0, page, pageSize, totalPages: 0 };
 			}
 
-			return db
+			const totalPages = Math.ceil(total / pageSize);
+			const safePage = Math.min(page, totalPages);
+
+			const items = await db
 				.select()
 				.from(templates)
-				.orderBy(templates.type, templates.createdAt);
+				.where(where)
+				.orderBy(templates.type, templates.createdAt)
+				.limit(pageSize)
+				.offset((safePage - 1) * pageSize);
+
+			return { items, total, page: safePage, pageSize, totalPages };
 		}),
 
 	create: protectedProcedure

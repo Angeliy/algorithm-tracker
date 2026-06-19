@@ -1,7 +1,7 @@
 import { db, problems } from "@algorithm-tracker/db";
 import { TRPCError } from "@trpc/server";
 import { format, parseISO } from "date-fns";
-import { and, eq, lte } from "drizzle-orm";
+import { and, count, eq, lte } from "drizzle-orm";
 import { z } from "zod";
 
 import { protectedProcedure, router } from "../index";
@@ -103,25 +103,43 @@ export const reviewRouter = router({
 			return updated;
 		}),
 
-	getPending: protectedProcedure.query(async () => {
-		const today = format(new Date(), "yyyy-MM-dd");
-		const rows = await db
-			.select()
-			.from(problems)
-			.where(
-				and(
-					eq(problems.needsReview, true),
-					eq(problems.reviewArchived, false),
-					lte(problems.nextReviewAt, today)
-				)
-			)
-			.orderBy(problems.nextReviewAt);
+	getPending: protectedProcedure
+		.input(
+			z.object({
+				page: z.number().int().min(1).default(1),
+				pageSize: z.number().int().min(1).max(100).default(20),
+			})
+		)
+		.query(async ({ input }) => {
+			const { page, pageSize } = input;
+			const today = format(new Date(), "yyyy-MM-dd");
+			const where = and(
+				eq(problems.needsReview, true),
+				eq(problems.reviewArchived, false),
+				lte(problems.nextReviewAt, today)
+			);
 
-		const ids = rows.map((r) => r.id);
-		if (ids.length === 0) {
-			return [];
-		}
+			const countResult = await db
+				.select({ total: count() })
+				.from(problems)
+				.where(where);
+			const total = countResult[0]?.total ?? 0;
 
-		return rows;
-	}),
+			if (total === 0) {
+				return { items: [], total: 0, page, pageSize, totalPages: 0 };
+			}
+
+			const totalPages = Math.ceil(total / pageSize);
+			const safePage = Math.min(page, totalPages);
+
+			const items = await db
+				.select()
+				.from(problems)
+				.where(where)
+				.orderBy(problems.nextReviewAt)
+				.limit(pageSize)
+				.offset((safePage - 1) * pageSize);
+
+			return { items, total, page: safePage, pageSize, totalPages };
+		}),
 });
