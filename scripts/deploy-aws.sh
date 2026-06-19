@@ -31,6 +31,7 @@ SERVER_ZIP="$BUILD_DIR/server.zip"
 ASSUME_ROLE_POLICY="$BUILD_DIR/lambda-assume-role.json"
 WEB_POLICY="$BUILD_DIR/web-bucket-policy.json"
 CF_CONFIG="$BUILD_DIR/cloudfront-distribution.json"
+LAMBDA_ENV_CONFIG="$BUILD_DIR/lambda-environment.json"
 
 mkdir -p "$BUILD_DIR"
 
@@ -270,10 +271,41 @@ else
 fi
 
 echo "Updating Lambda environment..."
+EXISTING_LAMBDA_ENV="$(aws lambda get-function-configuration \
+	--function-name "$LAMBDA_NAME" \
+	--region "$AWS_REGION" \
+	--query 'Environment.Variables' \
+	--output json 2>/dev/null || echo '{}')"
+
+EXISTING_LAMBDA_ENV="$EXISTING_LAMBDA_ENV" \
+	NODE_ENV=production \
+	DATABASE_URL="$DATABASE_URL" \
+	BETTER_AUTH_SECRET="$BETTER_AUTH_SECRET" \
+	BETTER_AUTH_URL="$API_URL" \
+	CORS_ORIGIN="$WEB_URL" \
+	node --input-type=module -e '
+		import { writeFileSync } from "node:fs";
+
+		const existing = JSON.parse(process.env.EXISTING_LAMBDA_ENV || "{}");
+		const variables = {
+			...existing,
+			NODE_ENV: process.env.NODE_ENV,
+			DATABASE_URL: process.env.DATABASE_URL,
+			BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+			BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+			CORS_ORIGIN: process.env.CORS_ORIGIN,
+		};
+
+		writeFileSync(
+			process.argv[1],
+			JSON.stringify({ Variables: variables })
+		);
+	' "$LAMBDA_ENV_CONFIG"
+
 aws lambda update-function-configuration \
 	--function-name "$LAMBDA_NAME" \
 	--region "$AWS_REGION" \
-	--environment "Variables={NODE_ENV=production,DATABASE_URL=$DATABASE_URL,BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET,BETTER_AUTH_URL=$API_URL,CORS_ORIGIN=$WEB_URL}" \
+	--environment "file://$LAMBDA_ENV_CONFIG" \
 	--output text >/dev/null
 aws lambda wait function-updated \
 	--function-name "$LAMBDA_NAME" \
