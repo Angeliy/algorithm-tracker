@@ -10,9 +10,10 @@
 | 4    | review-system        | 错题本标记、艾宾浩斯5次复习、待复习列表     | 2    | 待开发 |
 | 5    | templates-links      | 算法模板库 CRUD、题目关联（双向多对多）     | 2    | 待开发 |
 
-| 6    | leetcode-sync        | LeetCode 定时同步、WA 判断、auto-create 题目、sync_log | 2,4  | 待开发 |
+| 6    | leetcode-sync        | LeetCode 定时同步、WA 判断、auto-create 题目、sync_log | 2,4  | 已完成 |
+| 7    | workflow-monitor     | /workflow 页实时监控 M1-M7 节点状态（SSE + 文件写入）  | 3    | 待开发 |
 
-**推荐执行顺序**：1 → 2 → 3 / 4 / 5（3、4、5 均依赖 2，互相独立可并行）→ 6（依赖 2 + 4）
+**推荐执行顺序**：1 → 2 → 3 / 4 / 5（3、4、5 均依赖 2，互相独立可并行）→ 6（依赖 2 + 4）→ 7（依赖 3）
 
 ## ID 编号约定
 

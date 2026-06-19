@@ -1,3 +1,5 @@
+import { readFileSync, watch } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { createContext } from "@algorithm-tracker/api/context";
 import { appRouter } from "@algorithm-tracker/api/routers/index";
 import { runSyncSafe } from "@algorithm-tracker/api/services/leetcode-sync";
@@ -8,6 +10,12 @@ import { trpcServer } from "@hono/trpc-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { streamSSE } from "hono/streaming";
+
+const STATUS_FILE = fileURLToPath(
+	new URL("../../../specs/workflow-status.json", import.meta.url)
+);
+const STATUS_DIR = fileURLToPath(new URL("../../../specs/", import.meta.url));
 
 export const app = new Hono();
 
@@ -49,3 +57,48 @@ app.post("/api/sync/run", async (c) => {
 		);
 	}
 });
+
+app.get("/api/workflow/stream", (c) =>
+	streamSSE(c, async (stream) => {
+		const send = async () => {
+			try {
+				const raw = readFileSync(STATUS_FILE, "utf-8");
+				await stream.writeSSE({ data: raw, event: "status" });
+			} catch {
+				try {
+					await stream.writeSSE({
+						data: JSON.stringify({ status: "idle" }),
+						event: "status",
+					});
+				} catch {
+					// stream already closed
+				}
+			}
+		};
+
+		await send();
+
+		let watcher: ReturnType<typeof watch> | undefined;
+		try {
+			watcher = watch(STATUS_DIR, { persistent: false }, (_event, filename) => {
+				if (filename === "workflow-status.json") {
+					send().catch(() => undefined);
+				}
+			});
+		} catch {
+			// fs.watch unavailable; serve initial state only
+		}
+
+		const heartbeat = setInterval(() => {
+			stream.writeSSE({ data: "", event: "ping" }).catch(() => undefined);
+		}, 30_000);
+
+		await new Promise<void>((resolve) => {
+			stream.onAbort(() => {
+				watcher?.close();
+				clearInterval(heartbeat);
+				resolve();
+			});
+		});
+	})
+);

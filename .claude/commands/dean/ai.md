@@ -54,11 +54,23 @@ flowchart TD
 5. 加载 `{SPECS_DIR}/LESSONS.md`（如果存在，里面是架构决策和踩坑记录，开发时必须参考）
 6. 验证代码项目路径存在
 
+**状态写入（进入 M1 时）：** 用 Write 工具写入 `{SPECS_DIR}/workflow-status.json`（占位符须替换为实际值）：
+```jsonc
+{"node":"M1","nodeLabel":"初始化","featureId":0,"featureName":"","featureProgress":"","taskId":"","taskTitle":"","taskProgress":"","status":"in_progress","updatedAt":"2026-06-20T00:00:00.000Z"}
+```
+**状态写入（M1 完成时）：** 将 `"status"` 改为 `"completed"` 再写一次。
+
 ### M2: 进入 Feature
 
 1. 读取该 feature 的 requirements.md、design.md、tasks.md
 2. 断点恢复：`[x]` 已完成 → 跳过，`[DROPPED]` → 跳过，`[CHANGED]` → 按更新后描述执行
 3. 如该 feature 所有任务已完成 → 跳过，进入下一个 feature
+
+**状态写入（进入 M2 时）：** 用 Write 工具写入 `{SPECS_DIR}/workflow-status.json`（占位符须替换为实际值）：
+```jsonc
+{"node":"M2","nodeLabel":"进入 Feature","featureId":2,"featureName":"user-auth","featureProgress":"1/6","taskId":"","taskTitle":"","taskProgress":"","status":"in_progress","updatedAt":"2026-06-20T00:00:00.000Z"}
+```
+`featureProgress` = 已完成 feature 数 / 总 feature 数。**状态写入（M2 完成时）：** 将 `"status"` 改为 `"completed"` 再写一次。
 
 **任务数检查（强制）：** 统计未完成任务数（`[ ]` 的行）
 
@@ -87,7 +99,19 @@ flowchart TD
 - 技术选型自行选最优解，不暂停
 - 业务逻辑/产品方向问题不确定 → 暂停与用户沟通
 
+**状态写入（进入 M3 时，每个 task 开始前）：** 用 Write 工具写入 `{SPECS_DIR}/workflow-status.json`（占位符须替换为实际值）：
+```jsonc
+{"node":"M3","nodeLabel":"执行 Task","featureId":2,"featureName":"user-auth","featureProgress":"1/6","taskId":"T-003","taskTitle":"登录接口","taskProgress":"2/8","status":"in_progress","updatedAt":"2026-06-20T00:00:00.000Z"}
+```
+`featureProgress` = 已完成 feature 数 / 总 feature 数；`taskProgress` = 当前 feature 已完成 task 数 / 当前 feature 总 task 数。**状态写入（M3 完成时，即 task 开发完毕进入 Review 前）：** 将 `"status"` 改为 `"completed"` 再写一次。
+
 ### M4: Review（AI 自审 + Codex Review，强制）
+
+**状态写入（进入 M4 时）：** 用 Write 工具写入 `{SPECS_DIR}/workflow-status.json`（占位符须替换为实际值）：
+```jsonc
+{"node":"M4","nodeLabel":"Review","featureId":2,"featureName":"user-auth","featureProgress":"1/6","taskId":"T-003","taskTitle":"登录接口","taskProgress":"2/8","status":"in_progress","updatedAt":"2026-06-20T00:00:00.000Z"}
+```
+**状态写入（M4 完成时）：** 将 `"status"` 改为 `"completed"` 再写一次。
 
 每个 task 完成后必须执行，按**单个 task 粒度**审查。
 
@@ -119,6 +143,12 @@ AI 自审通过后，调用 `/codex:review <本task涉及的文件路径>`（这
 
 ### M5: 标记完成（强制，不可跳过）
 
+**状态写入（进入 M5 时）：** 用 Write 工具写入 `{SPECS_DIR}/workflow-status.json`（占位符须替换为实际值）：
+```jsonc
+{"node":"M5","nodeLabel":"标记完成","featureId":2,"featureName":"user-auth","featureProgress":"1/6","taskId":"T-003","taskTitle":"登录接口","taskProgress":"2/8","status":"in_progress","updatedAt":"2026-06-20T00:00:00.000Z"}
+```
+**状态写入（M5 完成时）：** 将 `"status"` 改为 `"completed"`，同时将 `taskProgress` 的已完成数加一（此时 task 已标记 `[x]`）再写一次。
+
 遗漏会导致断点恢复时重复执行任务。
 
 1. 用 Edit 工具打开 tasks.md，找到当前任务对应的行
@@ -137,6 +167,12 @@ AI 自审通过后，调用 `/codex:review <本task涉及的文件路径>`（这
 
 ### M6: 上下文管理
 
+**状态写入（进入 M6 时）：** 用 Write 工具写入 `{SPECS_DIR}/workflow-status.json`（占位符须替换为实际值）：
+```jsonc
+{"node":"M6","nodeLabel":"上下文管理","featureId":2,"featureName":"user-auth","featureProgress":"1/6","taskId":"T-003","taskTitle":"登录接口","taskProgress":"3/8","status":"in_progress","updatedAt":"2026-06-20T00:00:00.000Z"}
+```
+**状态写入（M6 完成时）：先写 `"status": "completed"` 再执行 `/clear`**，避免 /clear 后丢失上下文导致状态遗留 `in_progress`。
+
 **task 完成后：** 执行 `/clear`，重新读取当前 feature 的 specs（requirements.md、design.md、tasks.md）+ LESSONS.md + `.claude/CLAUDE.md`/`rules/`，继续下一个 task。
 
 **task 执行中：** 上下文达 80% → 执行 `/compact` 后继续当前 task。
@@ -146,6 +182,15 @@ AI 自审通过后，调用 `/codex:review <本task涉及的文件路径>`（这
 **Feature 完成时的验收检查：** 该 feature 所有 task 标记完成后，对照 requirements.md 里的验收标准（AC-001 等）逐条自查一遍，确认全部满足才算真正完成；如果发现某条没满足，回到对应 task 补做，不要直接放过。完成后执行 `/clear`，进入下一个 feature。
 
 ### M7: 完成
+
+**状态写入（进入 M7 时）：** 用 Write 工具写入 `{SPECS_DIR}/workflow-status.json`：
+```jsonc
+{"node":"M7","nodeLabel":"完成","featureId":0,"featureName":"","featureProgress":"","taskId":"","taskTitle":"","taskProgress":"","status":"in_progress","updatedAt":"2026-06-20T00:00:00.000Z"}
+```
+**状态写入（M7 完成后，全部结束时）：** 重置为 IDLE_STATUS：
+```jsonc
+{"node":"idle","nodeLabel":"","featureId":0,"featureName":"","featureProgress":"","taskId":"","taskTitle":"","taskProgress":"","status":"idle","updatedAt":"2026-06-20T00:00:00.000Z"}
+```
 
 所有 feature 的所有任务完成后：
 
@@ -171,3 +216,4 @@ AI 自审通过后，调用 `/codex:review <本task涉及的文件路径>`（这
 - 未完成当前节点前，不得进入下一节点
 - **暂停：** 业务逻辑歧义、不确定的安全问题、破坏性变更、环境阻塞
 - **不暂停：** 纯技术选型 — 选最优解直接执行
+- **每个节点开始执行和完成时**，除了输出确认行，还要按各节点说明中的「状态写入」指令用 Write 工具更新 `specs/workflow-status.json`，供 `/workflow` 页面实时监控读取
