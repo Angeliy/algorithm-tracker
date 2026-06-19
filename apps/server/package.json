@@ -21,6 +21,7 @@
     "@trpc/server": "catalog:",
     "better-auth": "catalog:",
     "date-fns": "^4.4.0",
+    "drizzle-orm": "catalog:",
     "dotenv": "catalog:",
     "hono": "catalog:",
     "node-cron": "^4.4.1",

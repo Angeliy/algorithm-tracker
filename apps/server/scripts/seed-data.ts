@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { db, problems, problemTags, templates } from "@algorithm-tracker/db";
 import { addDays, format, subDays } from "date-fns";
+import { eq } from "drizzle-orm";
 
 const today = new Date();
 const d = (offset: number) => format(subDays(today, offset), "yyyy-MM-dd");
@@ -383,6 +384,17 @@ async function seedData() {
 	// ── 插入题目 ──────────────────────────────────────────────────────────
 	console.log("📝 插入题目记录...");
 	for (const p of PROBLEMS) {
+		const existing = await db
+			.select({ id: problems.id })
+			.from(problems)
+			.where(eq(problems.title, p.title))
+			.limit(1);
+
+		if (existing.length > 0) {
+			console.log(`  ↷ ${p.title} 已存在，跳过`);
+			continue;
+		}
+
 		const markedAt = p.needsReview ? p.date : null;
 		const [inserted] = await db
 			.insert(problems)
@@ -416,6 +428,17 @@ async function seedData() {
 	// ── 插入模板 ──────────────────────────────────────────────────────────
 	console.log("\n📚 插入代码模板...");
 	for (const t of TEMPLATES) {
+		const existing = await db
+			.select({ id: templates.id })
+			.from(templates)
+			.where(eq(templates.type, t.type))
+			.limit(1);
+
+		if (existing.length > 0) {
+			console.log(`  ↷ ${t.type} 已存在，跳过`);
+			continue;
+		}
+
 		await db.insert(templates).values({
 			type: t.type,
 			code: t.code,
