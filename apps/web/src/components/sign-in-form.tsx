@@ -3,16 +3,12 @@ import { Input } from "@algorithm-tracker/ui/components/input";
 import { Label } from "@algorithm-tracker/ui/components/label";
 import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
-import { Zap } from "lucide-react";
 import { toast } from "sonner";
 import z from "zod";
 
 import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
-
-const DEMO_EMAIL = "dean@demo.com";
-const DEMO_PASSWORD = "1234567";
 
 export default function SignInForm({
 	onSwitchToSignUp,
@@ -54,28 +50,11 @@ export default function SignInForm({
 	}
 
 	return (
-		<div className="space-y-8">
+		<div className="space-y-6">
 			<div className="space-y-1.5">
 				<h1 className="font-semibold text-2xl tracking-tight">欢迎回来</h1>
 				<p className="text-muted-foreground text-sm">登录你的算法学习追踪器</p>
 			</div>
-
-			<button
-				className="w-full rounded-lg border border-primary/40 border-dashed bg-primary/5 px-4 py-3 text-left transition-colors hover:bg-primary/10"
-				onClick={() => {
-					form.setFieldValue("email", DEMO_EMAIL);
-					form.setFieldValue("password", DEMO_PASSWORD);
-				}}
-				type="button"
-			>
-				<div className="flex items-center gap-2 text-primary">
-					<Zap className="h-3.5 w-3.5" />
-					<span className="font-medium text-sm">演示账号一键填入</span>
-				</div>
-				<p className="mt-0.5 text-muted-foreground text-xs">
-					{DEMO_EMAIL} · {DEMO_PASSWORD}
-				</p>
-			</button>
 
 			<form
 				className="space-y-4"
