@@ -55,6 +55,7 @@ function isWorkflowStatus(v: unknown): v is WorkflowStatus {
 }
 
 const SSE_URL = `${env.VITE_SERVER_URL}/api/workflow/stream`;
+const STATUS_URL = `${env.VITE_SERVER_URL}/api/workflow/status`;
 
 const DIAGRAM = `flowchart LR
   A["🔧 /dean:init\\n初始化项目"] --> B["📋 /dean:prd\\n需求→Specs"]
@@ -144,6 +145,22 @@ function WorkflowStatusPanel() {
 	const [status, setStatus] = useState<WorkflowStatus>(IDLE_STATUS);
 
 	useEffect(() => {
+		let closed = false;
+		const refreshStatus = async () => {
+			try {
+				const res = await fetch(STATUS_URL);
+				if (!res.ok) {
+					return;
+				}
+				const parsed: unknown = await res.json();
+				if (!closed && isWorkflowStatus(parsed)) {
+					setStatus(parsed);
+				}
+			} catch {
+				// keep the last known status
+			}
+		};
+
 		const es = new EventSource(SSE_URL);
 		es.addEventListener("status", (e) => {
 			try {
@@ -155,7 +172,15 @@ function WorkflowStatusPanel() {
 				// ignore malformed JSON
 			}
 		});
-		return () => es.close();
+		const initialStatusTimer = window.setTimeout(refreshStatus, 1500);
+		const pollingTimer = window.setInterval(refreshStatus, 2000);
+
+		return () => {
+			closed = true;
+			es.close();
+			window.clearTimeout(initialStatusTimer);
+			window.clearInterval(pollingTimer);
+		};
 	}, []);
 
 	return <StatusGrid status={status} />;

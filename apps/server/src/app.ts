@@ -16,6 +16,15 @@ const STATUS_FILE = fileURLToPath(
 	new URL("../../../specs/workflow-status.json", import.meta.url)
 );
 const STATUS_DIR = fileURLToPath(new URL("../../../specs/", import.meta.url));
+const IDLE_WORKFLOW_STATUS = { status: "idle" } as const;
+
+function readWorkflowStatus(): string {
+	try {
+		return readFileSync(STATUS_FILE, "utf-8");
+	} catch {
+		return JSON.stringify(IDLE_WORKFLOW_STATUS);
+	}
+}
 
 export const app = new Hono();
 
@@ -62,17 +71,9 @@ app.get("/api/workflow/stream", (c) =>
 	streamSSE(c, async (stream) => {
 		const send = async () => {
 			try {
-				const raw = readFileSync(STATUS_FILE, "utf-8");
-				await stream.writeSSE({ data: raw, event: "status" });
+				await stream.writeSSE({ data: readWorkflowStatus(), event: "status" });
 			} catch {
-				try {
-					await stream.writeSSE({
-						data: JSON.stringify({ status: "idle" }),
-						event: "status",
-					});
-				} catch {
-					// stream already closed
-				}
+				// stream already closed
 			}
 		};
 
@@ -102,3 +103,8 @@ app.get("/api/workflow/stream", (c) =>
 		});
 	})
 );
+
+app.get("/api/workflow/status", (c) => {
+	const status = JSON.parse(readWorkflowStatus()) as unknown;
+	return c.json(status);
+});
