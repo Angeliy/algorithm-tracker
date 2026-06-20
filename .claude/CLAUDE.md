@@ -136,6 +136,8 @@ Most formatting and common issues are automatically fixed by Biome. Run `pnpm dl
 - 包管理: pnpm (workspace)
 - 构建: Turborepo
 
+> **注意**：shadcn CLI（`pnpm dlx shadcn add`）在当前环境中无法访问 registry，所有 UI 组件须手动实现。使用 `@base-ui/react/<component>` 配合 `render` prop 模式，参考 `packages/ui/src/components/` 中已有组件。
+
 ## 常用命令
 
 - 安装依赖: `pnpm install`

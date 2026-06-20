@@ -16,7 +16,9 @@ packages/db/src/
 ├── schema/
 │   ├── index.ts      # 汇总所有 schema 导出
 │   ├── auth.ts       # Better Auth 相关表
-│   └── todo.ts       # 业务表示例
+│   ├── problem.ts    # 题目 + 标签表
+│   ├── template.ts   # 算法模板表
+│   └── sync-log.ts   # LeetCode 同步日志表
 └── migrations/       # 自动生成的 SQL migration 文件
 ```
 
